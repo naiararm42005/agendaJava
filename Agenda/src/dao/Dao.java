@@ -16,6 +16,7 @@ public class Dao {
 	Conexion con;
 
 	public Dao() throws SQLException {
+
 		con = new Conexion();
 	}
 
