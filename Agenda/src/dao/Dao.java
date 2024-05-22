@@ -53,6 +53,7 @@ public class Dao {
 		return null; // en caso de que no existe retornamos null
 	}
 
+//a
 	public boolean existe(String nombre) throws SQLException {
 		Connection c = con.getConnection(); // abrimos conexion
 		PreparedStatement ps = c.prepareStatement("SELECT nombre FROM contactos WHERE nombre = ?");
