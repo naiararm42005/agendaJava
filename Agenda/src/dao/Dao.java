@@ -53,7 +53,6 @@ public class Dao {
 		return null; // en caso de que no existe retornamos null
 	}
 
-//a
 	public boolean existe(String nombre) throws SQLException {
 		Connection c = con.getConnection(); // abrimos conexion
 		PreparedStatement ps = c.prepareStatement("SELECT nombre FROM contactos WHERE nombre = ?");
@@ -95,4 +94,36 @@ public class Dao {
 		ps.execute();
 		c.close();
 	}
+
+	public void modificar(Contacto contacto) throws SQLException {
+		Connection c = con.getConnection();
+		PreparedStatement ps = c.prepareStatement(
+				"UPDATE contactos SET tel = ?, email = ?, fecha_nac = ?, empresa = ? WHERE nombre = ?");
+		ps.setInt(1, contacto.getTelefono());
+		ps.setString(2, contacto.getEmail());
+		if (contacto instanceof Amigo) {
+			ps.setDate(3, ((((Amigo) contacto).getFecha_nac() == null) ? null
+					: new java.sql.Date(((Amigo) contacto).getFecha_nac().getTime())));
+			ps.setString(4, null);
+
+		} else {
+			ps.setDate(3, null);
+			ps.setString(4,
+					((((Profesional) contacto).getEmpresa() == null)) ? null : ((Profesional) contacto).getEmpresa());
+		}
+		ps.setString(5, contacto.getNombre());
+		ps.execute();
+		c.close();
+	}
+
+	public boolean deleteAll() throws SQLException {
+		Connection c = con.getConnection(); // abrimos conexion
+		Statement st = c.createStatement();
+		ResultSet rs = st.executeQuery("DELETE FROM contactos");
+		if (!rs.next())
+			return false;
+
+		return true;
+	}
+
 }

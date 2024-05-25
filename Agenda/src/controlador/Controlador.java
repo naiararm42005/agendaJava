@@ -78,41 +78,46 @@ public class Controlador {
 
 	public void importar(String ruta) throws FileNotFoundException, ExisteExcepcion, SQLException,
 			NumberFormatException, CampoVacioExcepcion, ParseException {
-		File f = new File(ruta); // metemos la ruta para que sepa donde esta el archivo para importar los
-									// contactos
-		Scanner teclado; // ponemos un scanner
-		teclado = new Scanner(f); // y aqui el scanner recoge el fichero de los contactos
-		while (teclado.hasNextLine()) { // mientras que el fichero tenga otra linea
-			String linea = teclado.nextLine(); // almaceno la linea en la variable llamada linea
-			Scanner sl = new Scanner(linea); // contruye un nuevo scanner (sl) que produce valores scaneados del string
-			// specifico (linea)
-			sl.useDelimiter("[,\\s]"); // separa el contenido del scanner (sl) segun el delimitador specificado (en
-			// este caso es una coma o un salto de linea)
+		File f = new File(ruta);
+		Scanner teclado;
+		teclado = new Scanner(f);
+		while (teclado.hasNextLine()) {
+			String linea = teclado.nextLine();
+			Scanner sl = new Scanner(linea);
+			sl.useDelimiter("[,\\s]");
 
-			String nombre = sl.next(); // recoge el primer elemento (particion/trozo) del scanner despues de aplicarle
-										// el delimitador
+			String nombre = sl.next();
 			if (this.existe(nombre)) {
 				sl.close();
 				throw new ExisteExcepcion(nombre, true);
 			}
-			String telefono = sl.next();// recoge el segundo elemento (particion/trozo) del scanner despues de aplicarle
-										// el delimitador
-			String email = sl.next(); // recoge el tercer elemento (particion/trozo) del scanner despues de aplicarle
-										// el delimitador
-			String variable = sl.next(); // recoge el cuarto elemento (particion/trozo) del scanner despues de aplicarle
-											// el delimitador
-			// como cada linea consta de 4 elementos no podemos pedirle que haga otro next,
-			// porque sino daria error
-			if (variable.contains("-")) {
-				// en caso de que el elemento contenga un "-" sera un amigo o una
-				// empresa/profsional
+			String telefono = sl.next();
+			String email = sl.next();
+			String variable = sl.next();
+			if (variable.contains("-"))
 				this.setContacto(nombre, telefono, email, variable, null, "Amigo");
-			} else {
+			else
 				this.setContacto(nombre, telefono, email, null, variable, "Profesional");
-			}
 		}
-		teclado.close(); // cerramos el scanner para que asi no se pueda escribir mas
-
+		teclado.close();
 	}
 
+	public void modificar(String nombre, String telefono, String email, String fecha_nac, String empresa)
+			throws SQLException, ParseException {
+		Contacto c = dao.getContacto(nombre);
+		c.setEmail((email.isBlank()) ? null : email.trim());
+		c.setTelefono(Integer.parseInt(telefono.trim()));
+		if (c instanceof Amigo) {
+			((Amigo) c).setFecha_nac(
+					(fecha_nac.isBlank()) ? null : new SimpleDateFormat("yyyy-MM-dd").parse(fecha_nac.trim()));
+		} else {
+			((Profesional) c).setEmpresa((empresa.isBlank()) ? null : empresa.trim());
+		}
+		dao.modificar(c);
+	}
+
+	public void deleteAll() throws SQLException, AgendaVaciaExcepcion {
+		if (!dao.deleteAll())
+			throw new AgendaVaciaExcepcion();
+	}
 }

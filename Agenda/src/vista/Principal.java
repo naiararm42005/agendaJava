@@ -7,7 +7,6 @@ import java.awt.FileDialog;
 import java.awt.Font;
 import java.awt.Label;
 import java.awt.List;
-import java.awt.Panel;
 import java.awt.SystemColor;
 import java.awt.TextField;
 import java.awt.event.ActionEvent;
@@ -17,6 +16,7 @@ import java.awt.event.ItemListener;
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
@@ -39,10 +39,6 @@ public class Principal {
 	private JFrame frame;
 	private Controlador controlador;
 	private FileDialog fichero;
-	/**
-	 * @wbp.nonvisual location=572,659
-	 */
-	private final Panel panel = new Panel();
 
 	/**
 	 * Launch the application.
@@ -138,7 +134,8 @@ public class Principal {
 			email.setText(c.getEmail());
 			email.setEnabled(true);
 			if (c instanceof Amigo) {
-				fecha_nac.setText(String.valueOf(((Amigo) c).getFecha_nac()));
+				fecha_nac.setText(((((Amigo) c).getFecha_nac()) == null) ? null
+						: new SimpleDateFormat("yyyy-MM-dd").format(((Amigo) c).getFecha_nac()));
 				empresa.setText("");
 				empresa.setEnabled(false);
 				fecha_nac.setEnabled(true);
@@ -163,6 +160,7 @@ public class Principal {
 			controlador.baja(nombre);
 			this.setLista();
 			this.reset();
+			JOptionPane.showMessageDialog(frame, "Contacto dado de baja correctamente");
 		} catch (SQLException e) {
 			JOptionPane.showMessageDialog(frame, e.getMessage());
 		} catch (ExisteExcepcion e) {
@@ -174,6 +172,7 @@ public class Principal {
 		try {
 			controlador.setContacto(nombre, telefono, email, fecha_nac, empresa, tipo);
 			this.setLista();
+			JOptionPane.showMessageDialog(frame, "Contacto dado de alta correctamente");
 		} catch (NumberFormatException e) {
 			JOptionPane.showMessageDialog(frame, "El formato del telefono es erroneo.");
 		} catch (CampoVacioExcepcion e) {
@@ -188,7 +187,6 @@ public class Principal {
 	}
 
 	private void tipoContacto(Object selectedItem) {
-
 		if (selectedItem.equals("Amigo")) {
 			empresa.setEnabled(false);
 		} else {
@@ -201,7 +199,6 @@ public class Principal {
 		if (selectedItem.equals("Amigo")) {
 			empresa.setEnabled(false);
 			fecha_nac.setEnabled(true);
-
 		} else {
 			fecha_nac.setEnabled(false);
 			empresa.setEnabled(true);
@@ -210,14 +207,38 @@ public class Principal {
 
 	}
 
+	private void modificar() {
+		try {
+			controlador.modificar(nombre.getText(), telefono.getText(), email.getText(), fecha_nac.getText(),
+					empresa.getText());
+			JOptionPane.showMessageDialog(frame, "Contacto modificado correctamente");
+		} catch (SQLException e) {
+			JOptionPane.showMessageDialog(frame, e.getMessage());
+		} catch (ParseException e) {
+			JOptionPane.showMessageDialog(frame, "El formato de la fecha es erroneo.");
+		}
+	}
+
+	private void deleteAll() {
+		try {
+			controlador.deleteAll();
+			this.setLista();
+			this.reset();
+		} catch (SQLException e) {
+			JOptionPane.showMessageDialog(frame, e.getMessage());
+		} catch (AgendaVaciaExcepcion e) {
+			JOptionPane.showMessageDialog(frame, e);
+		}
+
+	}
+
 	/**
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
-
 		frame = new JFrame();
 		frame.setResizable(false);
-		frame.setBounds(100, 100, 436, 325);
+		frame.setBounds(100, 100, 436, 344);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
 
@@ -335,7 +356,7 @@ public class Principal {
 		});
 		alta.setFont(new Font("Arial", Font.BOLD, 13));
 		alta.setBackground(SystemColor.activeCaption);
-		alta.setBounds(340, 225, 70, 22);
+		alta.setBounds(339, 253, 70, 22);
 		frame.getContentPane().add(alta);
 
 		baja = new Button("Baja");
@@ -346,14 +367,33 @@ public class Principal {
 		});
 		baja.setFont(new Font("Arial", Font.BOLD, 13));
 		baja.setBackground(new Color(255, 128, 128));
-		baja.setBounds(188, 225, 70, 22);
+		baja.setBounds(187, 253, 70, 22);
 		frame.getContentPane().add(baja);
 
 		modificar = new Button("Modificar");
+		modificar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				modificar();
+			}
+
+		});
 		modificar.setFont(new Font("Arial", Font.BOLD, 13));
 		modificar.setBackground(Color.ORANGE);
-		modificar.setBounds(264, 225, 70, 22);
+		modificar.setBounds(263, 253, 70, 22);
 		frame.getContentPane().add(modificar);
+
+		Button borrarTodo = new Button("Borrar todo");
+		borrarTodo.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				deleteAll();
+			}
+
+		});
+		borrarTodo.setFont(new Font("Arial", Font.PLAIN, 15));
+		borrarTodo.setForeground(new Color(255, 255, 255));
+		borrarTodo.setBackground(new Color(111, 0, 0));
+		borrarTodo.setBounds(10, 253, 136, 22);
+		frame.getContentPane().add(borrarTodo);
 
 		JMenuBar menuBar = new JMenuBar();
 		menuBar.setBackground(SystemColor.activeCaption);
@@ -362,7 +402,7 @@ public class Principal {
 		JMenu mnNewMenu = new JMenu("Archivo");
 		menuBar.add(mnNewMenu);
 
-		JMenuItem mntmNewMenuItem = new JMenuItem("Cargar");
+		JMenuItem mntmNewMenuItem = new JMenuItem("Importar");
 		mntmNewMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				importar();
